@@ -1,7 +1,7 @@
 import express from 'express';
 import { createServer } from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
-import { GoogleGenAI, LiveServerMessage } from '@google/genai';
+import { GoogleGenAI, LiveServerMessage, Modality } from '@google/genai';
 import dotenv from 'dotenv';
 import path from 'path';
 
@@ -41,7 +41,7 @@ wss.on('connection', async (ws) => {
 
     const config = {
         generationConfig: {
-            responseModalities: ["AUDIO"],
+            responseModalities: ["AUDIO" as Modality],
             speechConfig: {
                 voiceConfig: {
                     prebuiltVoiceConfig: {
@@ -95,7 +95,7 @@ Non inventare destinazioni o nomi non in lista.`
                     required: ["cliente", "autista", "destinazione", "tipo_viaggio", "data"]
                 }
             }]
-        }]
+        } as any]
     };
 
     let session: any;
