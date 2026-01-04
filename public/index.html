@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Trip Collector</title>
+    <link rel="stylesheet" href="index.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>Trip Collector AI</h1>
+            <p style="color: var(--text-muted);">Voice Assistant Demo</p>
+        </header>
+
+        <div class="card">
+            <div class="controls">
+                <div id="status-dot" class="status-indicator"></div>
+                <button id="start-btn" class="btn">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M19 10v2a7 7 0 0 1-14 0v-2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M12 19v4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M8 23h8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    Start Assistant
+                </button>
+                <div id="wave-anim" class="mic-wave hidden">
+                    <div class="bar" style="animation-delay: 0s"></div>
+                    <div class="bar" style="animation-delay: 0.1s"></div>
+                    <div class="bar" style="animation-delay: 0.2s"></div>
+                    <div class="bar" style="animation-delay: 0.3s"></div>
+                    <div class="bar" style="animation-delay: 0.4s"></div>
+                </div>
+            </div>
+            
+            <div id="logs" class="log-container">
+                <div class="log-entry">System: Ready to connect. Click Start.</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>Collected Trips</h3>
+            <table class="trips-table">
+                <thead>
+                    <tr>
+                        <th>Cliente</th>
+                        <th>Autista</th>
+                        <th>Destinazione</th>
+                        <th>Tipo</th>
+                        <th>Data</th>
+                    </tr>
+                </thead>
+                <tbody id="trips-body">
+                    <!-- Rows will be added here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
