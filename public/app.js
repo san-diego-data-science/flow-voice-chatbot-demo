@@ -110,6 +110,7 @@ async function start() {
             } else if (data.type === 'trips_update') {
                 updateTrips(data.trips);
             } else if (data.type === 'audio') {
+                log("Received audio chunk");
                 audioQueue.push(data.data);
                 playNextAudio();
             }

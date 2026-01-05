@@ -12,10 +12,10 @@ const server = createServer(app);
 const wss = new WebSocketServer({ server });
 
 const port = process.env.PORT || 3000;
-const apiKey = process.env.GEMINI_API_KEY;
+const apiKey = process.env.GOOGLE_AI_STUDIO_API_KEY || process.env.GEMINI_API_KEY;
 
 if (!apiKey) {
-    console.error("GEMINI_API_KEY is not set");
+    console.error("GOOGLE_AI_STUDIO_API_KEY or GEMINI_API_KEY is not set");
     process.exit(1);
 }
 
@@ -37,7 +37,10 @@ wss.on('connection', async (ws) => {
     console.log("Client connected");
 
     const ai = new GoogleGenAI({ apiKey });
-    const model = 'models/gemini-2.0-flash-exp'; // Using the latest flash exp for speed and audio
+    const model = 'models/gemini-2.5-flash-native-audio-preview-12-2025';
+
+    console.log(`Attempting to connect with model: ${model}`);
+    console.log(`API Key present: ${!!apiKey}, Length: ${apiKey?.length}`);
 
     const config = {
         generationConfig: {
@@ -49,6 +52,10 @@ wss.on('connection', async (ws) => {
                     }
                 }
             },
+        },
+        contextWindowCompression: {
+            triggerTokens: "25600",
+            slidingWindow: { targetTokens: "12800" }
         },
         systemInstruction: {
             parts: [{
@@ -100,23 +107,7 @@ Non inventare destinazioni o nomi non in lista.`
 
     let session: any;
 
-    try {
-        session = await ai.live.connect({
-            model,
-            config
-        });
-    } catch (e) {
-        console.error("Failed to connect to Gemini Live:", e);
-        ws.close();
-        return;
-    }
 
-    // Handle messages from Gemini
-    // @ts-ignore - The SDK types might be slightly off for the event emitter pattern used here internally or I need to loop
-    // But looking at the provided ai_studio_code.ts, it uses callbacks. Let's use that if possible, or the stream.
-    // Wait, the ai_studio_code.ts used `ai.live.connect({ callbacks: ... })`. Let's stick to that pattern as it seems to be what the user has.
-
-    // Re-connecting with callbacks style to match user's working memory of the SDK
     session = await ai.live.connect({
         model,
         config,
@@ -131,6 +122,7 @@ Non inventare destinazioni o nomi non in lista.`
                     const parts = msg.serverContent.modelTurn.parts;
                     for (const part of parts) {
                         if (part.inlineData && part.inlineData.mimeType?.startsWith('audio/pcm')) {
+                            console.log("Received audio from Gemini");
                             // Send audio to client
                             ws.send(JSON.stringify({
                                 type: 'audio',
@@ -171,21 +163,28 @@ Non inventare destinazioni o nomi non in lista.`
                             }
                         }
                         // Send Tool Response back to Gemini
-                        session.send({
-                            toolResponse: {
-                                functionResponses: responses
-                            }
+                        session.sendToolResponse({
+                            functionResponses: responses
                         });
                     }
                 }
             },
-            onclose: (e) => {
+            onclose: (e: any) => {
                 console.log("Gemini session closed", e);
             },
-            onerror: (e) => {
+            onerror: (e: any) => {
                 console.error("Gemini session error", e);
             }
         }
+    });
+
+    // Send a message to start the conversation
+    session.sendClientContent({
+        turns: [{
+            parts: [{ text: "Ciao, iniziamo." }],
+            role: "user"
+        }],
+        turnComplete: true
     });
 
     // Handle messages from Client
@@ -197,14 +196,10 @@ Non inventare destinazioni o nomi non in lista.`
                 // parsed.data is base64 PCM 16kHz mono (hopefully)
                 // Send to Gemini
                 // The structure for realtime input:
-                await session.send({
-                    realtimeInput: {
-                        mediaChunks: [{
-                            mimeType: "audio/pcm;rate=16000",
-                            data: parsed.data // base64 string
-                        }]
-                    }
-                });
+                await session.sendRealtimeInput([{
+                    mimeType: "audio/pcm;rate=16000",
+                    data: parsed.data // base64 string
+                }]);
             } else if (parsed.type === 'start') {
                 // Nothing specific needed, session is already open
             }
